@@ -4,11 +4,11 @@
 .include "SSPopulateList.asm"
 
 .data
-        array: .space 16  # Allocate space for 2D Array[2][2] (4 integers * 4 bytes)
-    rand_seed: .word 0
+	array: .space 16  # Allocate space for 2D Array[2][2] (4 integers * 4 bytes)
+	rand_seed: .word 0
 
 .text
-.globl main
+	.globl main
 
 main:
     # Set up stack frame
