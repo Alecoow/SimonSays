@@ -2,6 +2,7 @@
 # By Alex Cooper
 
 .include "SSPopulateList.asm"
+.include "SSRand.asm"
 
 .data
 	array: .space 16  # Allocate space for 2D Array[2][2] (4 integers * 4 bytes)
@@ -11,13 +12,6 @@
 	.globl main
 
 main:
-    # Set up stack frame
-    addi $sp, $sp, -12
-    sw $ra, 8($sp)
-    sw $s0, 4($sp)
-    sw $s1, 0($sp)
-
-    # Initialize dimensions and size
     li $s0, 2  # dimensions = 2
     li $s1, 2  # size = 2
 
@@ -78,23 +72,3 @@ end_print_outer_loop:
     jr $ra
 
 
-
-
-
-
-
-
-
-
-
-
-# Create random number
-rand:
-    lw $t0, rand_seed
-    li $t1, 1103515245
-    mul $t0, $t0, $t1
-    li $t1, 12345
-    add $t0, $t0, $t1
-    sw $t0, rand_seed
-    srl $v0, $t0, 16
-    jr $ra
