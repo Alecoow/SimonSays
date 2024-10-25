@@ -23,6 +23,7 @@ main:
     addi $a1, $s1, 0  # size
     addi $a2, $t0, 0  # list (pointer to array)
     jal PopulateList
+    j exit
 
     # Print the 2D array
     li $t1, 0  # i = 0
@@ -52,8 +53,8 @@ print_inner_loop:
     # Increment j
     addi $t2, $t2, 1
     j print_inner_loop
+    
 end_print_inner_loop:
-
     # Print a newline
     li $a0, '\n'
     li $v0, 11  # syscall for print character
@@ -62,8 +63,8 @@ end_print_inner_loop:
     # Increment i
     addi $t1, $t1, 1
     j print_outer_loop
+    
 end_print_outer_loop:
-
     # Restore stack frame and return
     lw $ra, 8($sp)
     lw $s0, 4($sp)
@@ -72,3 +73,6 @@ end_print_outer_loop:
     jr $ra
 
 
+exit:
+    li $v0, 10
+    syscall
