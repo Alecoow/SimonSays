@@ -39,12 +39,12 @@
 main:
 	# Print welcome
 	la $a0, welcome
-	li $v0, 10
+	li $v0, 4 # print as string
 	syscall
 	
 	jal rand
-	move $a0, $v0
-	li $v0, 30
+	move $a0, $v0 # $a0 now holds random number
+	li $v0, 36 # print as unsigned int
 	syscall
 	
 	#draw rectangle
@@ -53,7 +53,6 @@ main:
 	# start game
 	#jal game_loop
 	j exit
-
 
 game_loop:
 	addi $sp, $sp, -4
@@ -65,11 +64,9 @@ game_loop:
 	addi $sp, $sp, 4
 	jr $ra # return to main
 
-
-
 get_time:
 	la $a0, time_struct
-	#li $v0, $v0, 30
+	li $v0, $v0, 30
 	syscall
 	jr $ra
 
