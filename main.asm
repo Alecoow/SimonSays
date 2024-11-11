@@ -2,7 +2,6 @@
 # Written by Alex Cooper
 .data
 press_any_key:			.asciiz "\nPress any key to exit...\n"
-rand_seed:				.word 	0
 welcome:				.asciiz "Welcome to Simon Says! How far can you get in 5 minutes?\n"
 time_up:				.asciiz "Time's up!\n"
 event_start:			.asciiz "Event Started: "
@@ -27,19 +26,22 @@ columns: 				.word 	1
 .text
 
 .globl print_message
-.globl exit_routine
+.globl exit
 .globl malloc
 .globl sleep
 .globl getc
 .globl main
-.globl get_time
+.globl time
 .globl rand
 .globl ClearConsole
 .globl AllocateArray
+.globl tests
 
 main:
 	la $a0, welcome
 	jal print_message # printf("Welcome ...")
+
+	jal tests	
 
 	la $a0, 2500
 	jal sleep # sleep(2500)
@@ -55,9 +57,59 @@ loop:
 	la $a0, press_any_key
 	jal print_message # printf("Press any key to exit...)
 	jal getc # get input
-	bne $v0, $0, exit_routine # jump to exit if getc() != 0
+	bne $v0, $0, exit # jump to exit if getc() != 0
 
 	b loop
+
+tests:
+	# malloc test
+	# $s0 malloc(8)
+	# Push stack (save 4 bytes for return address)
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	li $a0, 8 # Request an int
+	jal malloc # Call malloc
+	lw $ra, 0($sp)
+	and $s0, $v0, $v0 # Save allocated memory address in $s0
+	# print_int(999900)
+	li $t0, 999900
+	sw $t0, 4($s0)
+	lw $a0, 4($s0)
+	jal print_int
+	lw $ra, 0($sp)
+	la $a0, new_line
+	jal print_message
+	lw $ra, 0($sp)
+	# Test if we actually have malloc working by splitting the int
+	# print_int(990000)
+	li $t0, 990000
+	sw $t0, 0($s0)
+	lw $a0, 0($s0)
+	jal print_int
+	lw $ra, 0($sp)
+	la $a0, new_line
+	jal print_message
+	lw $ra, 0($sp)
+	# free(s0, 8)
+	la $a0, ($s0)
+	li $a1, 8
+	jal free	
+	lw $ra, 0($sp)
+	# rand test
+	# rand()
+	jal rand
+	lw $ra, 0($sp)
+	#print_int(v0)
+	la $a0, ($v0)
+	jal print_int
+	lw $ra, 0($sp)
+	la $a0, new_line
+	jal print_message
+	lw $ra, 0($sp)
+	# Pop stack
+	addi $sp, $sp, 4
+	# return
+	jr $ra
 
 # By default, MARS does not begin execution at "main" (though this can be changed in the settings), so any includes are put at the bottom
 .include "util.asm"
