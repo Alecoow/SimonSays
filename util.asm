@@ -136,4 +136,4 @@ after:
 exit:
 	li $v0, 10 # Exit
 	syscall
-	nop
+    jr $ra
