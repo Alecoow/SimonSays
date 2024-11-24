@@ -2,7 +2,8 @@
 .data
 time_struct_low: 		.word	0
 time_struct_high: 		.word	0
-rand_seed:				.word 	0
+rand_seed:				.word	0
+rand_lsfr_shift:		.word	0xCB536E6A
 .text
 
 # print_message - Prints a null-terminated string to the console
@@ -42,14 +43,14 @@ malloc: # void* malloc(size_t size) takes $a0 as argument, return val goes into 
 # Returns:
 #   None
 free: # void free(void* ptr, size_t size)
-    # Check if size is zero or negative
-    blez $a1, free_exit # if size <= 0 goto free_exit
+	# Check if size is zero or negative
+	blez $a1, free_exit # if size <= 0 goto free_exit
 	and $t0, $a0, $a0
 free_loop:
-    sb $zero, 0($t0) # a0[i] = NULL
-    addi $t0, $t0, 1  # i++
-    addi $a1, $a1, -1 # size--
-    bgtz $a1, free_loop # while (size)
+	sb $zero, 0($t0) # a0[i] = NULL
+	addi $t0, $t0, 1  # i++
+	addi $a1, $a1, -1 # size--
+	bgtz $a1, free_loop # while (size)
 free_exit:
     jr $ra
 
@@ -95,37 +96,52 @@ time: # time_struct time()
 	# Return to caller
 	jr $ra
 
-# rand - Generates a pseudo-random number using a LFSR algorithm
+# rand - Generates a pseudo-random number using an LFSR algorithm
 # Arguments:
 #   None
 # Returns:
 #   $v0 - pseudo-random number
 rand:
-	# Clear temp register
-	la $t0, ($zero)
-	# Save the return address
-	addi $sp, $sp, -4
-	sw $ra, 0($sp)
+    # Reserve stack space
+    addi $sp, $sp, -4
+    # Save the return address
+    sw $ra, 0($sp)
 
-	jal time
-	lw $ra, 0($sp)
-	lw $t0, ($v0) # Seed with the first four bytes of time_struct
-	
-	andi $t1, $t0, 1 # Get the least significant bit
-	srl $t0, $t0, 1 # Shift right by 1
-	beqz $t1, after # If LSB is 0, skip XOR
-	li $t2, 0xB400 # Load initial value (Any 4 byte number)
-	xor $t0, $t0, $t2 # XOR with the initial value
-after:
-	# Store the new seed value
-	sw $t0, rand_seed
+    # Load the current seed
+    lw $t0, rand_seed
 
-	# Return the generated random number
-	la $v0, 0($t0)
+    # If seed is zero, initialize it using time
+    bnez $t0, shift
 
-	# Restore stack and return address
-	addi $sp, $sp, 4
-	# Return to caller
+    # Seed is zero, initialize it
+    jal time
+    move $t0, $v0  # Use time value as seed
+
+shift:
+    # Get bit 0 (LSB) and bit 21
+    andi $t1, $t0, 1        # t1 = bit 0
+    srl $t2, $t0, 21
+    andi $t2, $t2, 1        # t2 = bit 21
+    xor $t1, $t1, $t2       # t1 = bit 0 XOR bit 21
+
+    # Shift seed right by 1
+    srl $t0, $t0, 1
+
+    # Place the new bit in the seed
+    sll $t1, $t1, 30
+    or $t0, $t0, $t1        # Insert new bit
+
+    # Store the new seed
+    sw $t0, rand_seed
+
+    # Move the generated random number to $v0
+	andi $v0, $t0, 0x7F   # Mask off the sign bit
+
+    # Restore stack space
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+
+    # Return to caller
     jr $ra
 
 # exit - Exits the program
@@ -136,4 +152,4 @@ after:
 exit:
 	li $v0, 10 # Exit
 	syscall
-    jr $ra
+	jr $ra
