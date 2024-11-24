@@ -3,7 +3,6 @@
 time_struct_low: 		.word	0
 time_struct_high: 		.word	0
 rand_seed:				.word	0
-rand_lsfr_shift:		.word	0xCB536E6A
 .text
 
 # print_message - Prints a null-terminated string to the console
@@ -82,17 +81,11 @@ getc: # char getc() ($v0 is our character)
 #	$v1 - high dword of time since epoch
 time: # time_struct time()
 	# For some reason, the return is on a0 and a1 instead of v0 and v1 like every other syscall
-	# It does not like using v0 directly, so use these temp values to store them.
-	la $t0, time_struct_low
-	la $t1, time_struct_high
 	li $v0, 30 # Syscall code for get time
 	syscall
-	# Store a0 and a1 into temp values
-	sw $a0, ($t0)
-	sw $a1, ($t1)
-	# Set v0 and v1
-	la $v0, time_struct_low
-	la $v1, time_struct_high
+	# Store a0 and a1 into return values
+	move $v0, $a0
+	move $v1, $a1
 	# Return to caller
 	jr $ra
 
@@ -115,30 +108,30 @@ rand:
 
     # Seed is zero, initialize it
     jal time
-    move $t0, $v0  # Use time value as seed
+	move $t0, $a0	
 
 shift:
     # Get bit 0 (LSB) and bit 21
-    andi $t1, $t0, 1        # t1 = bit 0
+    andi $t1, $t0, 1 # t1 = bit 0
     srl $t2, $t0, 21
-    andi $t2, $t2, 1        # t2 = bit 21
-    xor $t1, $t1, $t2       # t1 = bit 0 XOR bit 21
+    andi $t2, $t2, 1 # t2 = bit 21
+    xor $t1, $t1, $t2 # t1 = bit 0 XOR bit 21
 
     # Shift seed right by 1
     srl $t0, $t0, 1
 
     # Place the new bit in the seed
     sll $t1, $t1, 30
-    or $t0, $t0, $t1        # Insert new bit
+    or $t0, $t0, $t1 # Insert new bit
 
     # Store the new seed
     sw $t0, rand_seed
 
     # Move the generated random number to $v0
-	andi $v0, $t0, 0x7F   # Mask off the sign bit
+	andi $v0, $t0, 0x7F # Mask off the sign bit
 
     # Restore stack space
-    lw $ra, 0($sp)
+    lw $ra, 0($sp) # Restore return address
     addi $sp, $sp, 4
 
     # Return to caller
