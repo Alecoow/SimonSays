@@ -2,14 +2,21 @@
 # Written by Alex Cooper
 .data
 buffer:             .space 100
+start_time_low:     .word 0
+start_time_high:    .word 0
+welcome_msg:        .asciiz "Welcome to Simon Says!\n"
 time_up_msg:        .asciiz "Time's up!\n"
 enter_sequence_msg: .asciiz "Enter the sequence, separated by commas:\n"
 good_job_msg:       .asciiz "Good job! Moving to level "
 incorrect_msg:      .asciiz "Incorrect! Repeating level "
 invalid_chars_msg:  .asciiz "Invalid character(s)! Try again\n"
-final_score_msg:    .asciiz "Final Score: %d\n"
+final_score_msg:    .asciiz "Final Score: "
 newline:            .asciiz "\n"
 space:              .asciiz ", "
+#score_multiplier:   .float 1
+#time_multiplier:    .float 1
+#double_or_nothing:  .byte 0
+
 .align 4
 flattened_array:    .space 400 # Adjust size as needed
 
@@ -32,14 +39,34 @@ main:
     li $s1, 1 # dimensions = initial value
     li $s3, 0 # score = 0
     li $s4, 1 # level = 1
-    li $s5, 1 # score_multiplier = 1
-    li $s6, 1 # time_multiplier = 1 
+    # la $f0, score_multiplier # score_multiplier = 1
+    # la $f1, time_multiplier # time_multiplier = 1 
+
+    la $a0, welcome_msg
+    jal print_message
+
+    # start timer
+    jal time
+    sw $v0, start_time_low
+    sw $v1, start_time_high
 
 difficulty_loop:
     blt $s0, 6, difficulty_loop_body
     b end_game # Exit loop when difficulty >= 6
 
 difficulty_loop_body:
+
+    # Check if 5 minutes have passed
+    #jal time
+    #lw $t0, start_time_low # start time
+    #lw $t1, start_time_high
+    
+    #lw $t2, time_struct_low # current time
+    #lw $t3, time_struct_high
+
+    #li $t4, 300000 # 5 minutes in milliseconds
+    #addu $t0, $t0, $t4 # add 5 minutes to start time
+
     # Check if difficulty % 5 == 0
     li $t1, 5
     rem $t2, $s0, $t1
@@ -195,6 +222,11 @@ update_end:
     # Increase difficulty
     addi $s0, $s0, 1
     j difficulty_loop
+    
+#time_up:
+    #la $a0, time_up_msg
+    #jal print_message
+    #j end_game
 
 end_game:
     # Final score message

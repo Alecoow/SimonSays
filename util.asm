@@ -89,6 +89,24 @@ time: # time_struct time()
 	# Return to caller
 	jr $ra
 
+play_sound_correct:
+	li $a0, 119 # pitch
+	li $a1, 100 # duration
+	li $a2, 9 # instrument
+	li $a3, 100 # volume
+	li $v0, 33 # Syscall code for play sound
+	syscall
+	jr $ra
+
+play_sound_incorrect:
+	li $a0, 30 # pitch
+	li $a1, 100 # duration
+	li $a2, 25 # instrument
+	li $a3, 100 # volume
+	li $v0, 33 # Syscall code for play sound
+	syscall
+	jr $ra
+
 # rand - Generates a pseudo-random number using an LFSR algorithm
 # Arguments:
 #   None

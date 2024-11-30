@@ -340,10 +340,13 @@ skip_char:
 	j compare_loop
 
 compare_success:
+	jal play_sound_correct
 	li $v0, 1 # Return 1 for correct
 	j compare_exit
 
 compare_failure:
+	jal play_sound_incorrect
+	jal play_sound_incorrect
 	li $v0, 0 # Return 0 for incorrect
 	j compare_exit
 
@@ -356,3 +359,26 @@ compare_exit:
 	lw $ra, 4($sp)
 	addi $sp, $sp, 8
 	jr $ra
+
+# Start_Random_Event:
+#	addi $sp, $sp, -4
+#	sw $ra, 0($sp)
+#
+#	jal rand
+#
+#	lw $ra, 0($sp)
+#	addi $sp, $sp, 4
+#
+#	jle $v0, 5, Random_Event_Start # If the random number is less than or equal to 5, start the random event
+#	jr $ra
+#
+#Random_Event_Start:
+#	jle $v0, 1, Random_Event_1 # If the random number is less than or equal to 1, start random event 1
+#	jle $v0, 3, Random_Event_2 # If the random number is less than or equal to 3, start random event 2
+#	j Random_Event_3 # Otherwise, start random event 3
+#Random_Event_1:
+#	# random score_multiplier
+#Random_Event_2:
+#	# random time_multiplier
+#Random_Event_3:
+#	# double_or_nothing
