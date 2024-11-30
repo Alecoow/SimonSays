@@ -1,4 +1,5 @@
 A Simon Says game written entirely in MIPS assembly language.
 
 Demo:
-https://github.com/user-attachments/assets/151474df-3d63-430c-b296-1a48032006e8
+
+https://github.com/user-attachments/assets/01443f8d-239c-491c-ad58-3ab7f82c61ad
